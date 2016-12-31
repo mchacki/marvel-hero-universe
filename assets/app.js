@@ -31,7 +31,7 @@ function HeroLoaderController($scope, $http) {
     nodes: [],
     links: []
   };
- 
+
   $scope.$watch("search", function() {
     if ($scope.search.length >= 3) {
       $http.get("search/" + $scope.search)
@@ -57,7 +57,7 @@ function HeroLoaderController($scope, $http) {
     }
   }, true);
 
-  $scope.$watch("selected", function() {
+  var getConnection = function(){
     if ($scope.selected) {
       $http.get("hero/" + $scope.selected._key)
         .success(function(data) {
@@ -67,8 +67,26 @@ function HeroLoaderController($scope, $http) {
           var nData = svg.selectAll(".node")
             .data([]).exit().remove();
 
-          $scope.graph.nodes = data.nodes;
-          $scope.graph.links = data.edges;
+          (function(){
+            if ($scope.graph.nodes.length !== 0) {
+              for (var i=0; i<data.nodes.length; i++) {
+                var doit = true;
+                for (var j=0; j<$scope.graph.nodes.length; j++) {
+                  if (data.nodes[i]._key == $scope.graph.nodes[j]._key) {
+                    doit = false;
+                  }
+                }
+                if (doit) {
+                  $scope.graph.nodes.push(data.nodes[i]);
+                }
+              }
+              $scope.graph.links = $scope.graph.links.concat(data.edges);
+            } else {
+              $scope.graph.nodes = data.nodes;
+              $scope.graph.links = data.edges;
+            }
+          })();
+
           angular.forEach($scope.graph.links, function(e) {
             e.source = nodeForId(e._from);
             e.target = nodeForId(e._to);
@@ -90,7 +108,12 @@ function HeroLoaderController($scope, $http) {
             .enter().append("circle")
             .attr("class", "node")
             .attr("r", 20)
-            .style("fill", function(d) { return color(d.name); });
+            .style("fill", function(d) { return color(d.name); })
+            .on("click", function(d){
+              $scope.selected = d;
+              $scope.$apply();
+              getConnection
+            });
           node.append("title")
             .text(function(d) { return d.name; });
 
@@ -108,6 +131,7 @@ function HeroLoaderController($scope, $http) {
           alert("sorry there is an error on the server side");
         });
     }
-  });
-}
+  }
 
+  $scope.$watch("selected", getConnection);
+}
