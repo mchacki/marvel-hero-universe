@@ -82,14 +82,11 @@ function HeroLoaderController($scope, $http) {
               }
               $scope.graph.links = $scope.graph.links.concat(data.edges);
             } else {
-              console.log("hello")
               $scope.graph.nodes = data.nodes;
               $scope.graph.links = data.edges;
             }
           })();
 
-          console.log("new nodes" + $scope.graph.nodes);
-          console.log("new links" + $scope.graph.links);
           angular.forEach($scope.graph.links, function(e) {
             e.source = nodeForId(e._from);
             e.target = nodeForId(e._to);
@@ -113,10 +110,8 @@ function HeroLoaderController($scope, $http) {
             .attr("r", 20)
             .style("fill", function(d) { return color(d.name); })
             .on("click", function(d){
-              console.log(d);
               $scope.selected = d;
               $scope.$apply();
-              console.log($scope.selected);
               getConnection
             });
           node.append("title")
